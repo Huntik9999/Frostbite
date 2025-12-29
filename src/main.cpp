@@ -8,8 +8,12 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 */
 
 #include "raylib.h"
-
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
+#include <iostream>   // printing, debugging
+#include <vector>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
 
 int main ()
 {
@@ -22,7 +26,13 @@ int main ()
 	int screenWidth = 1280;
 	int screenHeight = 800;
 	Vector2 playerPosition = { (float)screenWidth / 2, (float)screenHeight / 2 };
-	Vector2 zombiePosition = {20,20};
+	Vector2 zombiePosition = {25,25};
+	Vector2 zombieSpawn[3] = {25,25};
+	std::vector<Vector2> zombiePositions;
+	zombiePositions.push_back({ 100, 100 });
+	zombiePositions.push_back({ 300, 200 });
+	zombiePositions.push_back({ 600, 400 });
+
 	// Create the window and OpenGL context
 	InitWindow(screenWidth, screenHeight, "Window 1");
 
@@ -49,12 +59,17 @@ int main ()
 		if (IsKeyDown(KEY_S)) playerPosition.y += 2.0f;
 		// get zombie to follow player 
 		//----------------------------------------------------------------------------------
-		if (zombiePosition.x != playerPosition.x) {
-
-
+		if (zombiePosition.x < playerPosition.x) {
+			zombiePosition.x += 1.5f; 
 		}
-		if (zombiePosition.y != playerPosition.y) {
-
+		if (zombiePosition.x > playerPosition.x) {
+			zombiePosition.x -= 1.5f;
+		}
+		if (zombiePosition.y > playerPosition.y) {
+			zombiePosition.y -= 1.5f;
+		}
+		if (zombiePosition.y < playerPosition.y) {
+			zombiePosition.y += 1.5f;
 		}
 		// Draw
 		//----------------------------------------------------------------------------------
@@ -62,8 +77,8 @@ int main ()
 
 			ClearBackground(BROWN);
 			DrawCircleV(playerPosition, 15.0f, SKYBLUE);
+			DrawCircleV(zombieSpawn[0], 25.0f, BLACK);
 			DrawCircleV(zombiePosition, 15.0f, RED);
-
 		EndDrawing();
 	}
 

@@ -16,11 +16,33 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include <cstdlib>
 #include <ctime>
 //------------------------------------------------------------------------------------
-struct Bullet {
+struct Zombie {
 	Vector2 position;
-	Vector2 acceleration;
-	bool disabled;
-	Color color; 
+	int health = 100;
+	int damage = 5;
+	float speed = 1.5f;
+};
+Zombie MakeZombie(Vector2 spawnPos, int round)
+{
+	Zombie z;
+	z.position = spawnPos;
+	z.health = 100 + (round - 1) * 20; 
+	return z;
+}
+void SpawnOneZombie(std::vector<Zombie>& zombies, Vector2 spawns[4], GameStats& stats)
+{
+	int idx = GetRandomValue(0, 3);            
+	zombies.push_back(MakeZombie(spawns[idx], stats.round));
+	stats.zombiesRendered++;
+	stats.zombiesUnrendered--;
+}
+struct GameStats {
+	int round = 1;
+	int score = 0;
+	int zombiesKilled = 0;
+	int zombiesLeft = 6;
+	int zombiesRendered = 0;
+	int zombiesUnrendered = 6;
 };
 typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING } GameScreen;
 int main()
@@ -37,13 +59,14 @@ int main()
 	Vector2 playerPosition = { (float)screenWidth / 2, (float)screenHeight / 2 };
 	Vector2 zombieSpawn[4] = {{ 25,25 }, { 1255,25 }, { 1255, 775 }, { 25, 775 }};
 	std::vector<Vector2> zombiePositions;
-	zombiePositions.push_back({ 25, 25 });
-	zombiePositions.push_back({ 1255, 25 });
-	zombiePositions.push_back({ 1255, 775 });
-	zombiePositions.push_back({ 25, 775});
+	std::vector<Zombie> zombies;
+	//zombiePositions.push_back({ 25, 25 });
+	//zombiePositions.push_back({ 1255, 25 });
+	//zombiePositions.push_back({ 1255, 775 });
+	//zombiePositions.push_back({ 25, 775});
 	bool startGame = false;
-	//bullets 
-	int framesCounter = 0;          // Useful to count frames
+	int framesCounter = 0; 
+	GameStats stats;
 
 	// Create the window and OpenGL context
 	InitWindow(screenWidth, screenHeight, "Window 1");
@@ -75,6 +98,7 @@ int main()
 				if (framesCounter > 360)
 				{
 					currentScreen = TITLE;
+					framesCounter = 0;
 				}
 			} break;
 			// In title screen
@@ -84,7 +108,23 @@ int main()
 			} break;
 			// In da game
 			case GAMEPLAY:
-			{
+			{	
+				//Round Logic here
+				//Spawn the zombies 
+				//check if we need to spawn more zombies
+				while (stats.zombiesRendered < 30 && stats.zombiesUnrendered !=0) {
+					SpawnOneZombie(zombies, zombieSpawn, stats);
+				}
+				//Check if zombies are dead
+				if (stats.zombiesLeft == 0) {
+					//incriment round
+					stats.round++;
+					//spawn new zombies
+					stats.zombiesLeft = stats.round * 5 ;
+				}
+		
+				
+				// Player Movement
 				if (IsKeyDown(KEY_D)) playerPosition.x += 2.0f;
 				if (IsKeyDown(KEY_A)) playerPosition.x -= 2.0f;
 				if (IsKeyDown(KEY_W)) playerPosition.y -= 2.0f;
@@ -109,6 +149,7 @@ int main()
 					zombiePosition.y += (rand() % 3) - 1;
 					//zombie collision with themselves
 				}
+
 			} break;
 			case ENDING:
 			{
@@ -160,6 +201,11 @@ int main()
 					DrawCircleV(zombiePosition, 15.0f, RED);
 				}
 				DrawText("Prototype - Frostbite", 540, 20, 20, LIGHTGRAY);
+				//dufault 1280 x 800
+				DrawText(TextFormat("Round: %i", stats.round), 600, 750, 20, BLACK);
+				DrawText(TextFormat("Zombies Left: %i", stats.zombiesLeft), 600, 725, 20, BLACK);
+				DrawText(TextFormat("Zombies Killed: %i", stats.zombiesKilled), 600, 700, 20, BLACK);
+
 
 			} break;
 			case ENDING:

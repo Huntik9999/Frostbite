@@ -157,7 +157,7 @@ int main()
 	std::vector<bool> col2;
 	bool collisionBullet = false;
 	bool collisionPlayer = false;
-	int zombieTagged = NULL;
+	int zombieTagged = -1;
 	Rectangle recCollision = { 0 };
 	Rectangle box = { screenWidth / 2.0f, screenHeight / 2.0f, 30, 30 };
 
@@ -271,7 +271,7 @@ int main()
 							stats.zombiesKilled++;
 							stats.zombiesLeft--;
 							stats.score += 10;
-							zombieTagged = NULL;
+							zombieTagged = -1;
 							zombies.erase(zombies.begin() + j);
 						}
 						player.gun.bullets.erase(player.gun.bullets.begin() + i);
@@ -344,17 +344,17 @@ int main()
 			for (Zombie& zombie : zombies) {
 				DrawCircleV(zombie.position, 10, GREEN);
 			}
-			if (collisionBullet && zombieTagged != NULL) {
+			if (collisionBullet && zombieTagged != -1) {
 				DrawCircleV(zombies[zombieTagged].position, 10, RED);
 			}
 			DrawText("Prototype - Frostbite", 540, 20, 20, LIGHTGRAY);
 			//dufault 1280 x 800
 			DrawText(TextFormat("FPS: %i", GetFPS()), 100, 20, 20, BLACK);;
-			DrawText(TextFormat("Score: %i", stats.score), 600, 800, 20, BLACK);
-			DrawText(TextFormat("Round: %i", stats.round), 600, 775, 20, BLACK);
-			DrawText(TextFormat("Health: %i", playerHealth), 600, 750, 20, BLACK);
-			DrawText(TextFormat("Zombies Left: %i", stats.zombiesLeft), 600, 725, 20, BLACK);
-			DrawText(TextFormat("Zombies Killed: %i", stats.zombiesKilled), 600, 700, 20, BLACK);
+			DrawText(TextFormat("Score: %i", stats.score), 600, 775, 20, BLACK);
+			DrawText(TextFormat("Round: %i", stats.round), 600, 750, 20, BLACK);
+			DrawText(TextFormat("Health: %i", playerHealth), 600, 725, 20, BLACK);
+			DrawText(TextFormat("Zombies Left: %i", stats.zombiesLeft), 600, 700, 20, BLACK);
+			DrawText(TextFormat("Zombies Killed: %i", stats.zombiesKilled), 600, 675, 20, BLACK);
 
 
 

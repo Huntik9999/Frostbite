@@ -266,6 +266,7 @@ int main()
 						if (zombie.health <= 0) {
 							stats.zombiesKilled++;
 							stats.zombiesLeft--;
+							stats.score += 10;
 							zombies.erase(zombies.begin() + j);
 						}
 						player.gun.bullets.erase(player.gun.bullets.begin() + i);
@@ -273,6 +274,18 @@ int main()
 					}
 				}
 			}
+			collision = false;
+			//check for zombie player collision
+			for (Zombie& zombie : zombies) {
+				if (CheckCollisionCircles(player.position, 15.0f, zombie.position, 10.0f)) {
+					collision = true;
+					playerHealth -= zombie.damage;
+					if (playerHealth <= 0) {
+						currentScreen = ENDING;
+					}
+				}
+			}
+
 
 		} break;
 		case ENDING:
@@ -333,9 +346,13 @@ int main()
 			}
 			DrawText("Prototype - Frostbite", 540, 20, 20, LIGHTGRAY);
 			//dufault 1280 x 800
-			DrawText(TextFormat("Round: %i", stats.round), 600, 750, 20, BLACK);
+			DrawText(TextFormat("FPS: %i", GetFPS()), 100, 20, 20, BLACK);;
+			DrawText(TextFormat("Score: %i", stats.score), 600, 800, 20, BLACK);
+			DrawText(TextFormat("Round: %i", stats.round), 600, 775, 20, BLACK);
+			DrawText(TextFormat("Health: %i", playerHealth), 600, 750, 20, BLACK);
 			DrawText(TextFormat("Zombies Left: %i", stats.zombiesLeft), 600, 725, 20, BLACK);
 			DrawText(TextFormat("Zombies Killed: %i", stats.zombiesKilled), 600, 700, 20, BLACK);
+
 
 
 		} break;

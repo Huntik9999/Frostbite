@@ -155,7 +155,9 @@ int main()
 	//fps target
 	SetTargetFPS(60);
 	std::vector<bool> col2;
-	bool collision = false;
+	bool collisionBullet = false;
+	bool collisionPlayer = false;
+	int zombieTagged = NULL;
 	Rectangle recCollision = { 0 };
 	Rectangle box = { screenWidth / 2.0f, screenHeight / 2.0f, 30, 30 };
 
@@ -253,20 +255,23 @@ int main()
 				//zombie collision with themselves
 			}
 
-			collision = false;
+			collisionBullet = false;
 			for (int i = 0; i < player.gun.bullets.size(); i++)
 			{
 				Vector2 bulletPos = player.gun.bullets[i].position;
 				for (int j = (int)zombies.size() - 1; j >= 0; j--) {
 					Zombie& zombie = zombies[j];
+					//mark zombie
 					if (CheckCollisionCircles(bulletPos, 8, zombie.position, 10))
 					{
-						collision = true;
+						collisionBullet = true;
+						zombieTagged = j;
 						zombie.health -= bullet.damage;
 						if (zombie.health <= 0) {
 							stats.zombiesKilled++;
 							stats.zombiesLeft--;
 							stats.score += 10;
+							zombieTagged = NULL;
 							zombies.erase(zombies.begin() + j);
 						}
 						player.gun.bullets.erase(player.gun.bullets.begin() + i);
@@ -274,11 +279,11 @@ int main()
 					}
 				}
 			}
-			collision = false;
+			collisionPlayer = false;
 			//check for zombie player collision
 			for (Zombie& zombie : zombies) {
 				if (CheckCollisionCircles(player.position, 15.0f, zombie.position, 10.0f)) {
-					collision = true;
+					collisionPlayer = true;
 					playerHealth -= zombie.damage;
 					if (playerHealth <= 0) {
 						currentScreen = ENDING;
@@ -339,10 +344,8 @@ int main()
 			for (Zombie& zombie : zombies) {
 				DrawCircleV(zombie.position, 10, GREEN);
 			}
-			if (collision) {
-				for (Zombie& zombie : zombies) {
-					DrawCircleV(zombie.position, 10, RED);
-				}
+			if (collisionBullet && zombieTagged != NULL) {
+				DrawCircleV(zombies[zombieTagged].position, 10, RED);
 			}
 			DrawText("Prototype - Frostbite", 540, 20, 20, LIGHTGRAY);
 			//dufault 1280 x 800

@@ -16,33 +16,21 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include <cstdlib>
 #include <ctime>
 //------------------------------------------------------------------------------------
-struct Zombie {
-	Vector2 position;
-	int health = 100;
-	int damage = 5;
-	float speed = 1.5f;
+class Zombie {
+	public:
+		Vector2 position;
+		int health = 100;
+		int damage = 50;
+		float speed = 1.5f;
 };
-Zombie MakeZombie(Vector2 spawnPos, int round)
-{
-	Zombie z;
-	z.position = spawnPos;
-	z.health = 100 + (round - 1) * 20; 
-	return z;
-}
-void SpawnOneZombie(std::vector<Zombie>& zombies, Vector2 spawns[4], GameStats& stats)
-{
-	int idx = GetRandomValue(0, 3);            
-	zombies.push_back(MakeZombie(spawns[idx], stats.round));
-	stats.zombiesRendered++;
-	stats.zombiesUnrendered--;
-}
+
 struct GameStats {
 	int round = 1;
 	int score = 0;
 	int zombiesKilled = 0;
-	int zombiesLeft = 6;
 	int zombiesRendered = 0;
 	int zombiesUnrendered = 6;
+	int zombiesLeft = zombiesRendered + zombiesUnrendered;
 };
 typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING } GameScreen;
 int main()
@@ -58,12 +46,8 @@ int main()
 	int playerHealth = 100;
 	Vector2 playerPosition = { (float)screenWidth / 2, (float)screenHeight / 2 };
 	Vector2 zombieSpawn[4] = {{ 25,25 }, { 1255,25 }, { 1255, 775 }, { 25, 775 }};
-	std::vector<Vector2> zombiePositions;
+	//std::vector<Vector2> zombiePositions;
 	std::vector<Zombie> zombies;
-	//zombiePositions.push_back({ 25, 25 });
-	//zombiePositions.push_back({ 1255, 25 });
-	//zombiePositions.push_back({ 1255, 775 });
-	//zombiePositions.push_back({ 25, 775});
 	bool startGame = false;
 	int framesCounter = 0; 
 	GameStats stats;
@@ -113,7 +97,17 @@ int main()
 				//Spawn the zombies 
 				//check if we need to spawn more zombies
 				while (stats.zombiesRendered < 30 && stats.zombiesUnrendered !=0) {
-					SpawnOneZombie(zombies, zombieSpawn, stats);
+					//spawn a zombie - health based on round
+					//choose random spawn point 1-4
+					int idx = GetRandomValue(0, 3);
+					Zombie z;
+					z.position = zombieSpawn[idx];
+					z.health = 100 + (stats.round - 1) * 20;
+					zombies.push_back(z);
+					//zombiePositions.push_back(z.position);
+					//update game stats 
+					stats.zombiesRendered++;
+					stats.zombiesUnrendered--;
 				}
 				//Check if zombies are dead
 				if (stats.zombiesLeft == 0) {
@@ -130,30 +124,30 @@ int main()
 				if (IsKeyDown(KEY_W)) playerPosition.y -= 2.0f;
 				if (IsKeyDown(KEY_S)) playerPosition.y += 2.0f;
 				//----------------------------------------------------------------------------------
-				for (Vector2& zombiePosition : zombiePositions) {
+				for (Zombie& zombie : zombies) {
 					// Move zombies toward player
-					if (zombiePosition.x < playerPosition.x) {
-						zombiePosition.x += 1.5f;
+					if (zombie.position.x < playerPosition.x) {
+						zombie.position.x += 1.5f;
 					}
-					if (zombiePosition.x > playerPosition.x) {
-						zombiePosition.x -= 1.5f;
+					if (zombie.position.x > playerPosition.x) {
+						zombie.position.x -= 1.5f;
 					}
-					if (zombiePosition.y > playerPosition.y) {
-						zombiePosition.y -= 1.5f;
+					if (zombie.position.y > playerPosition.y) {
+						zombie.position.y -= 1.5f;
 					}
-					if (zombiePosition.y < playerPosition.y) {
-						zombiePosition.y += 1.5f;
+					if (zombie.position.y < playerPosition.y) {
+						zombie.position.y += 1.5f;
 					}
 					// Add some random movement
-					zombiePosition.x += (rand() % 3) - 1;
-					zombiePosition.y += (rand() % 3) - 1;
+					zombie.position.x += (rand() % 3) - 1;
+					zombie.position.y += (rand() % 3) - 1;
 					//zombie collision with themselves
 				}
 
 			} break;
 			case ENDING:
 			{
-			
+				if (IsKeyPressed(KEY_ENTER)) currentScreen = TITLE;
 			} break;
 			default: break;
 		}
@@ -197,8 +191,8 @@ int main()
 					DrawCircleV(zombieSpawn[i], 25.0f, BLACK);
 				}
 				//draw zombies
-				for (Vector2& zombiePosition : zombiePositions) {
-					DrawCircleV(zombiePosition, 15.0f, RED);
+				for (Zombie& zombie : zombies) {
+					DrawCircleV(zombie.position, 10, GREEN);
 				}
 				DrawText("Prototype - Frostbite", 540, 20, 20, LIGHTGRAY);
 				//dufault 1280 x 800
@@ -212,8 +206,8 @@ int main()
 			{
 				// TODO: Draw ENDING screen here!
 				DrawRectangle(0, 0, screenWidth, screenHeight, BLUE);
-				DrawText("ENDING SCREEN", 20, 20, 40, DARKBLUE);
-				DrawText("PRESS ENTER or TAP to RETURN to TITLE SCREEN", 120, 220, 20, DARKBLUE);
+				DrawText("Dead Lol", 20, 20, 40, DARKBLUE);
+				DrawText("Press ENTER to return to title screen", 120, 220, 20, DARKBLUE);
 
 			} break;
 			default: break;

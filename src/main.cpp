@@ -323,7 +323,10 @@ public:
 		position.x += velocity.x;
 		position.y += velocity.y;
 
-		gun.Update();
+		if (gunNumber == 0) gun.Update();
+		else if (gunNumber == 1) gun2.Update();
+		else if (gunNumber == 2) gun3.Update();
+
 	}
 
 
@@ -339,7 +342,11 @@ public:
 			{ position.x, position.y, (float)texture.width, (float)texture.height },
 			{ texture.width / 2.f, texture.height / 2.f }, rotation, WHITE);
 
-		gun.Draw();
+		//gun.Draw();
+		if (gunNumber == 0) gun.Draw();
+		else if (gunNumber == 1) gun2.Draw();
+		else if (gunNumber == 2) gun3.Draw();
+
 	}
 
 };
@@ -393,7 +400,8 @@ int main()
 	bool collisionPlayer = false;
 	int zombieTagged = -1;
 	Rectangle recCollision = { 0 };
-	Rectangle gunBox = { screenWidth / 2.0f, screenHeight / 2.0f, 30, 30 };
+	Rectangle gunBox = { screenWidth / 2.0f, 0, 30, 30 };
+	Rectangle gunBox2 = { screenWidth / 2.0f, screenHeight / 2.0f, 30, 30 };
 
 	Player player;
 	player.position = { screenWidth / 2.0f, screenHeight / 2.0f };
@@ -503,6 +511,32 @@ int main()
 					}
 				}
 			}
+			else if (player.gunNumber == 2) {
+				for (int i = 0; i < player.gun3.bullets.size(); i++)
+				{
+					Vector2 bulletPos = player.gun3.bullets[i].position;
+					for (int j = (int)zombies.size() - 1; j >= 0; j--) {
+						Zombie& zombie = zombies[j];
+						//mark zombie
+						if (CheckCollisionCircles(bulletPos, 8, zombie.position, 10))
+						{
+							collisionBullet = true;
+							zombieTagged = j;
+							zombie.health -= bullet.damage;
+							if (zombie.health <= 0) {
+								stats.zombiesKilled++;
+								stats.zombiesLeft--;
+								stats.score += 10;
+								zombieTagged = -1;
+								zombies.erase(zombies.begin() + j);
+							}
+							player.gun3.bullets.erase(player.gun3.bullets.begin() + i);
+							break;
+						}
+					}
+				}
+			}
+
 			//zombie player collision
 			collisionPlayer = false;
 			for (Zombie& zombie : zombies) {
@@ -539,8 +573,13 @@ int main()
 					}
 				}
 			}
-			if (CheckCollisionCircleRec(player.position, 15.0f, gunBox) && IsKeyDown(KEY_E)) {
+			if (CheckCollisionCircleRec(player.position, 15.0f, gunBox) && IsKeyDown(KEY_E) && stats.score >= 100) {
 				player.gunNumber = 1;
+				stats.score -= 100;
+			}
+			if (CheckCollisionCircleRec(player.position, 15.0f, gunBox2) && IsKeyDown(KEY_E) && stats.score >= 100) {
+				player.gunNumber = 2;
+				stats.score -= 100;
 			}
 
 
@@ -600,6 +639,13 @@ int main()
 			BeginMode2D(camera.cam);
 			Vector2 worldMousePos = GetScreenToWorld2D(GetMousePosition(), camera.cam);
 			player.Draw(worldMousePos);
+			if (CheckCollisionCircleRec(player.position, 15.0f, gunBox)) {
+				DrawText("Press E for Minigun 100 Pts Req.", 600, 650, 20, ORANGE);
+			}
+			if (CheckCollisionCircleRec(player.position, 15.0f, gunBox2)) {
+				DrawText("Press E for Shotgun 100 Pts Req.", 600, 650, 20, ORANGE);
+			}
+			DrawRectangle(screenWidth / 2, 0, 30, 30, ORANGE);
 			DrawRectangle(screenWidth / 2, screenHeight / 2, 30, 30, ORANGE);
 			Vector2 recSize = { 10, 20 };
 			DrawCircleV(player.position, 15.0f, SKYBLUE);

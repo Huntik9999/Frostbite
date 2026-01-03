@@ -21,7 +21,7 @@ class Zombie {
 public:
 	Vector2 position{};
 	int health = 100;
-	int damage = 50;
+	int damage = 1;
 	float speed = 1.5f;
 
 	Zombie() {};
@@ -44,7 +44,9 @@ public:
 		position.x += (rand() % 3) - 1;
 		position.y += (rand() % 3) - 1;
 	}
+
 	
+
 };
 
 struct GameStats {
@@ -52,7 +54,7 @@ struct GameStats {
 	int score = 0;
 	int zombiesKilled = 0;
 	int zombiesRendered = 0;
-	int zombiesUnrendered = 30;
+	int zombiesUnrendered = 6;
 	int zombiesLeft = zombiesRendered + zombiesUnrendered;
 
 	GameStats() {};
@@ -77,8 +79,21 @@ struct GameStats {
 		zombiesLeft = zombiesRendered + zombiesUnrendered;
 
 	}
+
+	void spawnZombie(std::vector<Zombie>& zombies, Vector2 zombieSpawn[]) {
+		while (zombiesRendered < 30 && zombiesUnrendered != 0) {
+			int idx = GetRandomValue(0, 3);
+			Zombie z;
+			z.position = zombieSpawn[idx];
+			z.health = 100 + (round - 1) * 20;
+			zombies.push_back(z);
+			zombiesRendered++;
+			zombiesUnrendered--;
+		}
+
+	}
 };
-typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING } GameScreen;
+typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING, SETTINGS} GameScreen;
 class Gun;
 
 struct Bullet {
@@ -120,7 +135,7 @@ public:
 			Vector2 mousePosition = GetMousePosition();
 			Vector2 direction = Vector2Subtract(mousePosition, playerPos);
 			direction = Vector2Normalize(direction);
-			bullets.push_back( Bullet{ playerPos, direction });
+			bullets.push_back(Bullet{ playerPos, direction });
 			numOfBullets--;
 		}
 	}
@@ -173,6 +188,24 @@ public:
 			{ texture.width / 2.f, texture.height / 2.f }, rotation, WHITE);
 
 		gun.Draw();
+	}
+};
+class PlayerCam
+{
+public:
+	Camera2D cam{};
+
+	void Initialize(int screenWidth, int screenHeight)
+	{
+		cam.offset = { (float)screenWidth / 2.0f, (float)screenHeight / 2.0f };
+		cam.target = { 0, 0 };
+		cam.rotation = 0.0f;
+		cam.zoom = 1.0f;
+	}
+
+	void Update(Vector2 playerPosition)
+	{
+		cam.target = playerPosition;
 	}
 };
 int main()
@@ -236,6 +269,7 @@ int main()
 			{
 				currentScreen = TITLE;
 				framesCounter = 0;
+				startGame = false;
 			}
 		} break;
 		// In title screen
@@ -244,28 +278,18 @@ int main()
 			if (IsKeyPressed(KEY_ENTER)) currentScreen = GAMEPLAY;
 		} break;
 		// In da game
+		case SETTINGS:
+		{
+			if (IsKeyPressed(KEY_ENTER)) currentScreen = GAMEPLAY;
+		} break;
+		// In da settings
+
 		case GAMEPLAY:
 		{
+			if (IsKeyPressed(KEY_ENTER)) currentScreen = SETTINGS;
 			player.Update();
-			//Round Logic here
-			//Spawn the zombies 
-			//check if we need to spawn more zombies
-			while (stats.zombiesRendered < 30 && stats.zombiesUnrendered != 0) {
-				//spawn a zombie - health based on round
-				//choose random spawn point 1-4
-				int idx = GetRandomValue(0, 3);
-				Zombie z;
-				z.position = zombieSpawn[idx];
-				z.health = 100 + (stats.round - 1) * 20;
-				zombies.push_back(z);
-				//zombiePositions.push_back(z.position);
-				//update game stats 
-				stats.zombiesRendered++;
-				stats.zombiesUnrendered--;
-			}
-			//starts new round if all zombies are dead
+			stats.spawnZombie(zombies, zombieSpawn);
 			stats.startNewRound();
-			//----------------------------------------------------------------------------------
 			//zombies track player
 			for (Zombie& zombie : zombies) {
 				zombie.trackPlayer(player.position);
@@ -372,10 +396,16 @@ int main()
 				DrawText("1", 600, 400, 50, SKYBLUE);
 
 		} break;
+		// In da game
+		case SETTINGS:
+		{
+			ClearBackground(RAYWHITE);
+			DrawText("Press Enter To Resume", 360, 400, 50, SKYBLUE);
+		} break;
 		case TITLE:
 		{
 			ClearBackground(RAYWHITE);
-			DrawText("Press Enter To Start", 360, 400, 50, SKYBLUE);;
+			DrawText("Press Enter To Start", 360, 400, 50, SKYBLUE);
 
 		} break;
 		case GAMEPLAY:

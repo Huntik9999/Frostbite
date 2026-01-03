@@ -209,18 +209,77 @@ public:
 		}
 	}
 
-	void Shoot(Vector2 playerPos)
+	void Shoot(Vector2 playerPos, Vector2 worldMousePos)
 	{
 		if (numOfBullets > 0)
 		{
 			Vector2 mousePosition = GetMousePosition();
-			Vector2 direction = Vector2Subtract(mousePosition, playerPos);
+			Vector2 direction = Vector2Subtract(worldMousePos, playerPos);
 			direction = Vector2Normalize(direction);
 			bullets.push_back(Bullet{ playerPos, direction });
 			numOfBullets--;
 		}
 	}
 };
+class ShotGun {
+public:
+	int maxBullets = 10000;
+	int numOfBullets = maxBullets;
+	std::vector<Bullet> bullets;
+
+	ShotGun() {};
+
+	void Update()
+	{
+		for (int i = 0; i < bullets.size(); i++)
+		{
+			Bullet& bullet = bullets[i];
+			bullet.position = Vector2Add(bullet.position, Vector2Scale(bullet.velocity, 7));
+		}
+	}
+
+	void Draw()
+	{
+		for (int i = 0; i < bullets.size(); i++)
+		{
+			Bullet bullet = bullets[i];
+			DrawCircle((int)bullet.position.x, (int)bullet.position.y, 8, BLUE);
+		}
+	}
+
+	void Shoot(Vector2 playerPos, Vector2 worldMousePos)
+	{
+		if (numOfBullets > 0)
+		{
+			Vector2 mousePosition = GetMousePosition();
+			Vector2 direction = Vector2Subtract(worldMousePos, playerPos);
+			direction = Vector2Normalize(direction);
+			bullets.push_back(Bullet{ playerPos, direction });
+			numOfBullets--;
+			Vector2 mousePos2 = { GetMouseX() + 50.0f, static_cast<float>(GetMouseY()) };
+			Vector2 dir2 = Vector2Subtract(mousePos2, playerPos);
+			dir2 = Vector2Normalize(dir2);
+			bullets.push_back(Bullet{ playerPos, dir2 });
+			numOfBullets--;
+			Vector2 mousePos3 = { GetMouseX() + 100.0f, static_cast<float>(GetMouseY()) };
+			Vector2 dir3 = Vector2Subtract(mousePos3, playerPos);
+			dir3 = Vector2Normalize(dir3);
+			bullets.push_back(Bullet{ playerPos, dir3 });
+			numOfBullets--;
+			Vector2 mousePos4 = { GetMouseX() - 50.0f, static_cast<float>(GetMouseY()) };
+			Vector2 dir4 = Vector2Subtract(mousePos4, playerPos);
+			dir4 = Vector2Normalize(dir4);
+			bullets.push_back(Bullet{ playerPos, dir4 });
+			numOfBullets--;
+			Vector2 mousePos5 = { GetMouseX() - 100.0f, static_cast<float>(GetMouseY()) };
+			Vector2 dir5 = Vector2Subtract(mousePos5, playerPos);
+			dir5 = Vector2Normalize(dir5);
+			bullets.push_back(Bullet{ playerPos, dir5 });
+			numOfBullets--;
+		}
+	}
+};
+
 
 class Player
 {
@@ -230,6 +289,7 @@ public:
 	Texture2D texture;
 	Gun gun;
 	MiniGun gun2;
+	ShotGun gun3;
 	int gunNumber = 0;
 
 	// Player()
@@ -244,9 +304,17 @@ public:
 		if (IsKeyDown(KEY_D)) velocity.x += 0.5f;
 		if (IsKeyDown(KEY_A)) velocity.x -= 0.5f;
 
-		if (IsMouseButtonPressed(0))
+		if (IsMouseButtonPressed(0) && gunNumber == 0)
 		{
-			gun.Shoot(position, worldMousePos);
+			gun.Shoot(position, worldMousePos );
+		}
+		if (IsMouseButtonPressed(0) && gunNumber == 1)
+		{
+			gun2.Shoot(position, worldMousePos);
+		}
+		if (IsMouseButtonPressed(0) && gunNumber == 2)
+		{
+			gun3.Shoot(position, worldMousePos);
 		}
 
 		velocity.x *= 0.8f;

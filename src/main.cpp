@@ -258,25 +258,25 @@ public:
 			bullets.push_back(Bullet{ playerPos, direction });
 			numOfBullets--;
 
-			Vector2 mousePos2 = { worldMousePos.x + 50.f, worldMousePos.y };
+			Vector2 mousePos2 = { worldMousePos.x + 50.f, worldMousePos.y  };
 			Vector2 dir2 = Vector2Subtract(mousePos2, playerPos);
 			dir2 = Vector2Normalize(dir2);
 			bullets.push_back(Bullet{ playerPos, dir2 });
 			numOfBullets--;
 
-			Vector2 mousePos3 = { worldMousePos.x + 100.0f, worldMousePos.y };
+			Vector2 mousePos3 = { worldMousePos.x - 50.f, worldMousePos.y  };
 			Vector2 dir3 = Vector2Subtract(mousePos3, playerPos);
 			dir3 = Vector2Normalize(dir3);
 			bullets.push_back(Bullet{ playerPos, dir3 });
 			numOfBullets--;
 			
-			Vector2 mousePos4 = { worldMousePos.x - 50.0f, worldMousePos.y };
+			Vector2 mousePos4 = { worldMousePos.x , worldMousePos.y + 50.0f };
 			Vector2 dir4 = Vector2Subtract(mousePos4, playerPos);
 			dir4 = Vector2Normalize(dir4);
 			bullets.push_back(Bullet{ playerPos, dir4 });
 			numOfBullets--;
 			
-			Vector2 mousePos5 = { worldMousePos.x - 100.0f, worldMousePos.y };
+			Vector2 mousePos5 = { worldMousePos.x , worldMousePos.y - 50.0f };
 			Vector2 dir5 = Vector2Subtract(mousePos5, playerPos);
 			dir5 = Vector2Normalize(dir5);
 			bullets.push_back(Bullet{ playerPos, dir5 });
@@ -450,6 +450,7 @@ int main()
 		// In da game
 		case GAMEPLAY:
 		{
+			if (IsKeyPressed(KEY_ENTER)) currentScreen = SETTINGS;
 			Vector2 worldMousePos = GetScreenToWorld2D(GetMousePosition(), camera.cam);
 			player.Update(worldMousePos);
 			camera.Update(player.position);

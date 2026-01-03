@@ -169,17 +169,18 @@ public:
 		}
 	}
 
-	void Shoot(Vector2 playerPos)
+	void Shoot(Vector2 playerPos, Vector2 worldMousePos)
 	{
 		if (numOfBullets > 0)
 		{
 			Vector2 mousePosition = GetMousePosition();
-			Vector2 direction = Vector2Subtract(mousePosition, playerPos);
+			Vector2 direction = Vector2Subtract(worldMousePos, playerPos);
 			direction = Vector2Normalize(direction);
 			bullets.push_back(Bullet{ playerPos, direction });
 			numOfBullets--;
 		}
 	}
+
 };
 
 class MiniGun {
@@ -236,21 +237,16 @@ public:
 	//     texture = LoadTexture("res/player.jpeg");
 	// }
 
-	void Update()
+	void Update(Vector2 worldMousePos)
 	{
-		if (IsKeyDown(KEY_W)) velocity.y -= 1;
-		if (IsKeyDown(KEY_S)) velocity.y += 1;
-		if (IsKeyDown(KEY_D)) velocity.x += 1;
-		if (IsKeyDown(KEY_A)) velocity.x -= 1;
-		//if (IsKeyDown(KEY_E)) 
+		if (IsKeyDown(KEY_W)) velocity.y -= 0.5f;
+		if (IsKeyDown(KEY_S)) velocity.y += 0.5f;
+		if (IsKeyDown(KEY_D)) velocity.x += 0.5f;
+		if (IsKeyDown(KEY_A)) velocity.x -= 0.5f;
 
-		if (IsMouseButtonPressed(0) && gunNumber == 0)
+		if (IsMouseButtonPressed(0))
 		{
-			gun.Shoot(position);
-		}
-		if (IsMouseButtonPressed(0) && gunNumber == 1)
-		{
-			gun2.Shoot(position);
+			gun.Shoot(position, worldMousePos);
 		}
 
 		velocity.x *= 0.8f;
@@ -259,11 +255,11 @@ public:
 		position.x += velocity.x;
 		position.y += velocity.y;
 
-		if (gunNumber == 0) gun.Update();
-		else if (gunNumber == 1) gun2.Update();
+		gun.Update();
 	}
 
-	void Draw()
+
+	void Draw(Vector2 worldMousePos)
 	{
 		Vector2 mousePosition = GetMousePosition();
 		Vector2 difference = Vector2Subtract(mousePosition, position);
@@ -275,11 +271,31 @@ public:
 			{ position.x, position.y, (float)texture.width, (float)texture.height },
 			{ texture.width / 2.f, texture.height / 2.f }, rotation, WHITE);
 
-		//gun.Draw();
-		if (gunNumber == 0) gun.Draw();
-		else if (gunNumber == 1) gun2.Draw();
+		gun.Draw();
+	}
+
+};
+
+class PlayerCam
+{
+public:
+	Camera2D cam{};
+
+	void Initialize(int screenWidth, int screenHeight)
+	{
+		cam.offset = { (float)screenWidth / 2.0f, (float)screenHeight / 2.0f };
+		cam.target = { 0, 0 };
+		cam.rotation = 0.0f;
+		cam.zoom = 1.0f;
+	}
+
+	void Update(Vector2 playerPosition)
+	{
+		cam.target = playerPosition;
 	}
 };
+
+
 int main()
 {
 	// Initialization
@@ -315,6 +331,9 @@ int main()
 	player.position = { screenWidth / 2.0f, screenHeight / 2.0f };
 
 	Bullet bullet;
+	PlayerCam camera;
+	camera.Initialize(screenWidth, screenHeight);
+
 
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
@@ -356,7 +375,9 @@ int main()
 		// In da game
 		case GAMEPLAY:
 		{
-			player.Update();
+			Vector2 worldMousePos = GetScreenToWorld2D(GetMousePosition(), camera.cam);
+			player.Update(worldMousePos);
+			camera.Update(player.position);
 			stats.spawnZombie(zombies, zombieSpawn);
 			stats.startNewRound();
 			for (Zombie& zombie : zombies) {
@@ -508,7 +529,9 @@ int main()
 		case GAMEPLAY:
 		{
 			ClearBackground(BROWN);
-			player.Draw();
+			BeginMode2D(camera.cam);
+			Vector2 worldMousePos = GetScreenToWorld2D(GetMousePosition(), camera.cam);
+			player.Draw(worldMousePos);
 			DrawRectangle(screenWidth / 2, screenHeight / 2, 30, 30, ORANGE);
 			Vector2 recSize = { 10, 20 };
 			DrawCircleV(player.position, 15.0f, SKYBLUE);
@@ -523,6 +546,7 @@ int main()
 			if (collisionBullet && zombieTagged != -1) {
 				DrawCircleV(zombies[zombieTagged].position, zombies[zombieTagged].radius, RED);
 			}
+			EndMode2D();
 			DrawText("Prototype - Frostbite", 540, 20, 20, LIGHTGRAY);
 			//dufault 1280 x 800
 			stats.drawStats(playerHealth);

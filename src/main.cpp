@@ -23,6 +23,28 @@ public:
 	int health = 100;
 	int damage = 50;
 	float speed = 1.5f;
+
+	Zombie() {};
+
+	void trackPlayer(Vector2 playerPosition) {
+		// Move zombies toward player
+		if (position.x < playerPosition.x) {
+			position.x += 1.5f;
+		}
+		if (position.x > playerPosition.x) {
+			position.x -= 1.5f;
+		}
+		if (position.y > playerPosition.y) {
+			position.y -= 1.5f;
+		}
+		if (position.y < playerPosition.y) {
+			position.y += 1.5f;
+		}
+		// Add some random movement
+		position.x += (rand() % 3) - 1;
+		position.y += (rand() % 3) - 1;
+	}
+	
 };
 
 struct GameStats {
@@ -30,8 +52,31 @@ struct GameStats {
 	int score = 0;
 	int zombiesKilled = 0;
 	int zombiesRendered = 0;
-	int zombiesUnrendered = 6;
+	int zombiesUnrendered = 30;
 	int zombiesLeft = zombiesRendered + zombiesUnrendered;
+
+	GameStats() {};
+
+	void startNewRound() {
+		if (zombiesLeft == 0) {
+			//incriment round
+			round++;
+			//spawn new zombies
+			zombiesLeft = round * 5;
+			zombiesUnrendered = zombiesLeft;
+			zombiesRendered = 0;
+		}
+	}
+
+	void resetGame() {
+		round = 1;
+		score = 0;
+		zombiesKilled = 0;
+		zombiesRendered = 0;
+		zombiesUnrendered = 6;
+		zombiesLeft = zombiesRendered + zombiesUnrendered;
+
+	}
 };
 typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING } GameScreen;
 class Gun;
@@ -218,41 +263,12 @@ int main()
 				stats.zombiesRendered++;
 				stats.zombiesUnrendered--;
 			}
-			//Check if zombies are dead
-			if (stats.zombiesLeft == 0) {
-				//incriment round
-				stats.round++;
-				//spawn new zombies
-				stats.zombiesLeft = stats.round * 5;
-				stats.zombiesUnrendered = stats.zombiesLeft;
-				stats.zombiesRendered = 0;
-			}
-
-
-			// Player Movement
-			// if (IsKeyDown(KEY_D)) playerPosition.x += 2.0f;
-			// if (IsKeyDown(KEY_A)) playerPosition.x -= 2.0f;
-			// if (IsKeyDown(KEY_W)) playerPosition.y -= 2.0f;
-			// if (IsKeyDown(KEY_S)) playerPosition.y += 2.0f;
+			//starts new round if all zombies are dead
+			stats.startNewRound();
 			//----------------------------------------------------------------------------------
+			//zombies track player
 			for (Zombie& zombie : zombies) {
-				// Move zombies toward player
-				if (zombie.position.x < player.position.x) {
-					zombie.position.x += 1.5f;
-				}
-				if (zombie.position.x > player.position.x) {
-					zombie.position.x -= 1.5f;
-				}
-				if (zombie.position.y > player.position.y) {
-					zombie.position.y -= 1.5f;
-				}
-				if (zombie.position.y < player.position.y) {
-					zombie.position.y += 1.5f;
-				}
-				// Add some random movement
-				zombie.position.x += (rand() % 3) - 1;
-				zombie.position.y += (rand() % 3) - 1;
-				//zombie collision with themselves
+				zombie.trackPlayer(player.position);
 			}
 
 			collisionBullet = false;
@@ -279,14 +295,39 @@ int main()
 					}
 				}
 			}
+			//zombie player collision
 			collisionPlayer = false;
-			//check for zombie player collision
 			for (Zombie& zombie : zombies) {
+				//check for zombie player collision
 				if (CheckCollisionCircles(player.position, 15.0f, zombie.position, 10.0f)) {
 					collisionPlayer = true;
 					playerHealth -= zombie.damage;
 					if (playerHealth <= 0) {
 						currentScreen = ENDING;
+					}
+				}
+				//zombie zombie collision
+				for (Zombie& otherZombie : zombies) {
+					if (&zombie != &otherZombie) {
+						if (CheckCollisionCircles(zombie.position, 10.0f, otherZombie.position, 10.0f)) {
+							//simple collision response
+							if (zombie.position.x < otherZombie.position.x) {
+								zombie.position.x -= 1.0f;
+								otherZombie.position.x += 1.0f;
+							}
+							if (zombie.position.x > otherZombie.position.x) {
+								zombie.position.x += 1.0f;
+								otherZombie.position.x -= 1.0f;
+							}
+							if (zombie.position.y < otherZombie.position.y) {
+								zombie.position.y -= 1.0f;
+								otherZombie.position.y += 1.0f;
+							}
+							if (zombie.position.y > otherZombie.position.y) {
+								zombie.position.y += 1.0f;
+								otherZombie.position.y -= 1.0f;
+							}
+						}
 					}
 				}
 			}
@@ -295,6 +336,13 @@ int main()
 		} break;
 		case ENDING:
 		{
+			//sets stats back to default
+			stats.resetGame();
+			playerHealth = 100;
+			player.position = { screenWidth / 2.0f, screenHeight / 2.0f };
+			//clesar bullets and zombies
+			player.gun.bullets.clear();
+			zombies.clear();
 			if (IsKeyPressed(KEY_ENTER)) currentScreen = TITLE;
 		} break;
 		default: break;

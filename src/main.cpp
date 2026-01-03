@@ -23,7 +23,7 @@ public:
 	int health = 100;
 	int damage = 1;
 	int pointsWorth = 10;
-	float speed = 1.5f;
+	float speed = 0.5f;
 	float radius = 10.0f;
 	std::string zombieType;
 
@@ -61,16 +61,16 @@ public:
 	void trackPlayer(Vector2 playerPosition) {
 		// Move zombies toward player
 		if (position.x < playerPosition.x) {
-			position.x += 1.5f;
+			position.x += speed;
 		}
 		if (position.x > playerPosition.x) {
-			position.x -= 1.5f;
+			position.x -= speed;
 		}
 		if (position.y > playerPosition.y) {
-			position.y -= 1.5f;
+			position.y -= speed;
 		}
 		if (position.y < playerPosition.y) {
-			position.y += 1.5f;
+			position.y += speed;
 		}
 		// Add some random movement
 		position.x += (rand() % 3) - 1;
@@ -303,10 +303,10 @@ public:
 
 	void Update(Vector2 worldMousePos)
 	{
-		if (IsKeyDown(KEY_W)) velocity.y -= 1;
-		if (IsKeyDown(KEY_S)) velocity.y += 1;
-		if (IsKeyDown(KEY_D)) velocity.x += 1;
-		if (IsKeyDown(KEY_A)) velocity.x -= 1;
+		if (IsKeyDown(KEY_W)) velocity.y -= 0.5f;
+		if (IsKeyDown(KEY_S)) velocity.y += 0.5f;
+		if (IsKeyDown(KEY_D)) velocity.x += 0.5f;
+		if (IsKeyDown(KEY_A)) velocity.x -= 0.5f;
 		//if (IsKeyDown(KEY_E)) 
 
 		if (IsMouseButtonPressed(0) && gunNumber == 0)

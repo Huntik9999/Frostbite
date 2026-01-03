@@ -26,9 +26,13 @@ public:
 	float speed = 1.5f;
 	float radius = 10.0f;
 	std::string zombieType;
+	
 	Zombie() {};
 
 	Zombie(int num) {
+		setZombieStats(num);
+	}
+	void setZombieStats(int num) {
 		//Small 1 - 5
 		if (num >= 1 && num <= 5) {
 			zombieType = "Small";
@@ -52,7 +56,7 @@ public:
 		}
 		else 
 			std::cout << "Error: Invalid zombie type number" << std::endl;
-	};
+	}
 
 	void trackPlayer(Vector2 playerPosition) {
 		// Move zombies toward player
@@ -110,7 +114,8 @@ struct GameStats {
 	void spawnZombie(std::vector<Zombie>& zombies, Vector2 zombieSpawn[]) {
 		while (zombiesRendered < 30 && zombiesUnrendered != 0) {
 			int idx = GetRandomValue(0, 3);
-			Zombie z;
+			int zombieTypeNum = GetRandomValue(1, 10);
+			Zombie z(zombieTypeNum);
 			z.position = zombieSpawn[idx];
 			z.health = 100 + (round - 1) * 20;
 			zombies.push_back(z);
@@ -374,7 +379,7 @@ int main()
 							if (zombie.health <= 0) {
 								stats.zombiesKilled++;
 								stats.zombiesLeft--;
-								stats.score += 10;
+								stats.score += zombie.pointsWorth;
 								zombieTagged = -1;
 								zombies.erase(zombies.begin() + j);
 							}
@@ -399,7 +404,7 @@ int main()
 							if (zombie.health <= 0) {
 								stats.zombiesKilled++;
 								stats.zombiesLeft--;
-								stats.score += 10;
+								stats.score += zombie.pointsWorth;
 								zombieTagged = -1;
 								zombies.erase(zombies.begin() + j);
 							}
@@ -504,7 +509,7 @@ int main()
 		{
 			ClearBackground(BROWN);
 			player.Draw();
-			DrawRectangle(screenWidth / 2.0f, screenHeight / 2.0f, 30, 30, ORANGE);
+			DrawRectangle(screenWidth / 2, screenHeight / 2, 30, 30, ORANGE);
 			Vector2 recSize = { 10, 20 };
 			DrawCircleV(player.position, 15.0f, SKYBLUE);
 			//draw spawn points
@@ -516,7 +521,7 @@ int main()
 				zombie.draw();
 			}
 			if (collisionBullet && zombieTagged != -1) {
-				DrawCircleV(zombies[zombieTagged].position, 10, RED);
+				DrawCircleV(zombies[zombieTagged].position, zombies[zombieTagged].radius, RED);
 			}
 			DrawText("Prototype - Frostbite", 540, 20, 20, LIGHTGRAY);
 			//dufault 1280 x 800

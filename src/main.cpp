@@ -22,9 +22,37 @@ public:
 	Vector2 position{};
 	int health = 100;
 	int damage = 1;
+	int pointsWorth = 10;
 	float speed = 1.5f;
-
+	float radius = 10.0f;
+	std::string zombieType;
 	Zombie() {};
+
+	Zombie(int num) {
+		//Small 1 - 5
+		if (num >= 1 && num <= 5) {
+			zombieType = "Small";
+			health = 50;
+			radius = 7.5f;
+			pointsWorth = 5;
+		}
+		//Axe 6 - 9
+		else if(num >= 6 && num <= 9) {
+			zombieType = "Axe";
+			health = 100;
+			radius = 12.5f;
+			pointsWorth = 15;
+		}
+		//Big 10
+		else if (num == 10) {
+			zombieType = "Big";
+			health = 150;
+			radius = 15.0f;
+			pointsWorth = 50;
+		}
+		else 
+			std::cout << "Error: Invalid zombie type number" << std::endl;
+	};
 
 	void trackPlayer(Vector2 playerPosition) {
 		// Move zombies toward player
@@ -43,12 +71,13 @@ public:
 		// Add some random movement
 		position.x += (rand() % 3) - 1;
 		position.y += (rand() % 3) - 1;
+	} 
+
+	void draw() {
+		// Draw zombie
+		DrawCircleV(position, radius, GREEN);
 	}
-
-	
-
 };
-
 struct GameStats {
 	int round = 1;
 	int score = 0;
@@ -56,8 +85,6 @@ struct GameStats {
 	int zombiesRendered = 0;
 	int zombiesUnrendered = 6;
 	int zombiesLeft = zombiesRendered + zombiesUnrendered;
-
-	GameStats() {};
 
 	void startNewRound() {
 		if (zombiesLeft == 0) {
@@ -90,10 +117,19 @@ struct GameStats {
 			zombiesRendered++;
 			zombiesUnrendered--;
 		}
+	}
 
+	void drawStats(int playerHealth) {
+		// Draw stats on screen
+		DrawText(TextFormat("FPS: %i", GetFPS()), 100, 20, 20, BLACK);;
+		DrawText(TextFormat("Score: %i", score), 600, 775, 20, BLACK);
+		DrawText(TextFormat("Round: %i", round), 600, 750, 20, BLACK);
+		DrawText(TextFormat("Health: %i", playerHealth), 600, 725, 20, BLACK);
+		DrawText(TextFormat("Zombies Left: %i", zombiesLeft), 600, 700, 20, BLACK);
+		DrawText(TextFormat("Zombies Killed: %i", zombiesKilled), 600, 675, 20, BLACK);
 	}
 };
-typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING, SETTINGS} GameScreen;
+typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING, SETTINGS } GameScreen;
 class Gun;
 
 struct Bullet {
@@ -141,6 +177,45 @@ public:
 	}
 };
 
+class MiniGun {
+public:
+	int maxBullets = 1000000;
+	int numOfBullets = maxBullets;
+	std::vector<Bullet> bullets;
+
+	MiniGun() {};
+
+	void Update()
+	{
+		for (int i = 0; i < bullets.size(); i++)
+		{
+			Bullet& bullet = bullets[i];
+			bullet.position = Vector2Add(bullet.position, Vector2Scale(bullet.velocity, 10));
+		}
+	}
+
+	void Draw()
+	{
+		for (int i = 0; i < bullets.size(); i++)
+		{
+			Bullet bullet = bullets[i];
+			DrawCircle((int)bullet.position.x, (int)bullet.position.y, 8, YELLOW);
+		}
+	}
+
+	void Shoot(Vector2 playerPos)
+	{
+		if (numOfBullets > 0)
+		{
+			Vector2 mousePosition = GetMousePosition();
+			Vector2 direction = Vector2Subtract(mousePosition, playerPos);
+			direction = Vector2Normalize(direction);
+			bullets.push_back(Bullet{ playerPos, direction });
+			numOfBullets--;
+		}
+	}
+};
+
 class Player
 {
 public:
@@ -148,6 +223,8 @@ public:
 	Vector2 velocity = { 0, 0 };
 	Texture2D texture;
 	Gun gun;
+	MiniGun gun2;
+	int gunNumber = 0;
 
 	// Player()
 	// {
@@ -160,10 +237,15 @@ public:
 		if (IsKeyDown(KEY_S)) velocity.y += 1;
 		if (IsKeyDown(KEY_D)) velocity.x += 1;
 		if (IsKeyDown(KEY_A)) velocity.x -= 1;
+		//if (IsKeyDown(KEY_E)) 
 
-		if (IsMouseButtonPressed(0))
+		if (IsMouseButtonPressed(0) && gunNumber == 0)
 		{
 			gun.Shoot(position);
+		}
+		if (IsMouseButtonPressed(0) && gunNumber == 1)
+		{
+			gun2.Shoot(position);
 		}
 
 		velocity.x *= 0.8f;
@@ -172,7 +254,8 @@ public:
 		position.x += velocity.x;
 		position.y += velocity.y;
 
-		gun.Update();
+		if (gunNumber == 0) gun.Update();
+		else if (gunNumber == 1) gun2.Update();
 	}
 
 	void Draw()
@@ -187,25 +270,9 @@ public:
 			{ position.x, position.y, (float)texture.width, (float)texture.height },
 			{ texture.width / 2.f, texture.height / 2.f }, rotation, WHITE);
 
-		gun.Draw();
-	}
-};
-class PlayerCam
-{
-public:
-	Camera2D cam{};
-
-	void Initialize(int screenWidth, int screenHeight)
-	{
-		cam.offset = { (float)screenWidth / 2.0f, (float)screenHeight / 2.0f };
-		cam.target = { 0, 0 };
-		cam.rotation = 0.0f;
-		cam.zoom = 1.0f;
-	}
-
-	void Update(Vector2 playerPosition)
-	{
-		cam.target = playerPosition;
+		//gun.Draw();
+		if (gunNumber == 0) gun.Draw();
+		else if (gunNumber == 1) gun2.Draw();
 	}
 };
 int main()
@@ -237,7 +304,7 @@ int main()
 	bool collisionPlayer = false;
 	int zombieTagged = -1;
 	Rectangle recCollision = { 0 };
-	Rectangle box = { screenWidth / 2.0f, screenHeight / 2.0f, 30, 30 };
+	Rectangle gunBox = { screenWidth / 2.0f, screenHeight / 2.0f, 30, 30 };
 
 	Player player;
 	player.position = { screenWidth / 2.0f, screenHeight / 2.0f };
@@ -269,7 +336,6 @@ int main()
 			{
 				currentScreen = TITLE;
 				framesCounter = 0;
-				startGame = false;
 			}
 		} break;
 		// In title screen
@@ -277,45 +343,69 @@ int main()
 		{
 			if (IsKeyPressed(KEY_ENTER)) currentScreen = GAMEPLAY;
 		} break;
-		// In da game
+		// Settings screen
 		case SETTINGS:
 		{
 			if (IsKeyPressed(KEY_ENTER)) currentScreen = GAMEPLAY;
 		} break;
-		// In da settings
-
+		// In da game
 		case GAMEPLAY:
 		{
-			if (IsKeyPressed(KEY_ENTER)) currentScreen = SETTINGS;
 			player.Update();
 			stats.spawnZombie(zombies, zombieSpawn);
 			stats.startNewRound();
-			//zombies track player
 			for (Zombie& zombie : zombies) {
 				zombie.trackPlayer(player.position);
 			}
 
 			collisionBullet = false;
-			for (int i = 0; i < player.gun.bullets.size(); i++)
-			{
-				Vector2 bulletPos = player.gun.bullets[i].position;
-				for (int j = (int)zombies.size() - 1; j >= 0; j--) {
-					Zombie& zombie = zombies[j];
-					//mark zombie
-					if (CheckCollisionCircles(bulletPos, 8, zombie.position, 10))
-					{
-						collisionBullet = true;
-						zombieTagged = j;
-						zombie.health -= bullet.damage;
-						if (zombie.health <= 0) {
-							stats.zombiesKilled++;
-							stats.zombiesLeft--;
-							stats.score += 10;
-							zombieTagged = -1;
-							zombies.erase(zombies.begin() + j);
+			if (player.gunNumber == 0) {
+				for (int i = 0; i < player.gun.bullets.size(); i++)
+				{
+					Vector2 bulletPos = player.gun.bullets[i].position;
+					for (int j = (int)zombies.size() - 1; j >= 0; j--) {
+						Zombie& zombie = zombies[j];
+						//mark zombie
+						if (CheckCollisionCircles(bulletPos, 8, zombie.position, 10))
+						{
+							collisionBullet = true;
+							zombieTagged = j;
+							zombie.health -= bullet.damage;
+							if (zombie.health <= 0) {
+								stats.zombiesKilled++;
+								stats.zombiesLeft--;
+								stats.score += 10;
+								zombieTagged = -1;
+								zombies.erase(zombies.begin() + j);
+							}
+							player.gun.bullets.erase(player.gun.bullets.begin() + i);
+							break;
 						}
-						player.gun.bullets.erase(player.gun.bullets.begin() + i);
-						break;
+					}
+				}
+			}
+			else if (player.gunNumber == 1) {
+				for (int i = 0; i < player.gun2.bullets.size(); i++)
+				{
+					Vector2 bulletPos = player.gun2.bullets[i].position;
+					for (int j = (int)zombies.size() - 1; j >= 0; j--) {
+						Zombie& zombie = zombies[j];
+						//mark zombie
+						if (CheckCollisionCircles(bulletPos, 8, zombie.position, 10))
+						{
+							collisionBullet = true;
+							zombieTagged = j;
+							zombie.health -= bullet.damage;
+							if (zombie.health <= 0) {
+								stats.zombiesKilled++;
+								stats.zombiesLeft--;
+								stats.score += 10;
+								zombieTagged = -1;
+								zombies.erase(zombies.begin() + j);
+							}
+							player.gun2.bullets.erase(player.gun2.bullets.begin() + i);
+							break;
+						}
 					}
 				}
 			}
@@ -354,6 +444,9 @@ int main()
 						}
 					}
 				}
+			}
+			if (CheckCollisionCircleRec(player.position, 15.0f, gunBox) && IsKeyDown(KEY_E)) {
+				player.gunNumber = 1;
 			}
 
 
@@ -396,22 +489,22 @@ int main()
 				DrawText("1", 600, 400, 50, SKYBLUE);
 
 		} break;
-		// In da game
+		case TITLE:
+		{
+			ClearBackground(RAYWHITE);
+			DrawText("Press Enter To Start", 360, 400, 50, SKYBLUE);;
+
+		} break;
 		case SETTINGS:
 		{
 			ClearBackground(RAYWHITE);
 			DrawText("Press Enter To Resume", 360, 400, 50, SKYBLUE);
 		} break;
-		case TITLE:
-		{
-			ClearBackground(RAYWHITE);
-			DrawText("Press Enter To Start", 360, 400, 50, SKYBLUE);
-
-		} break;
 		case GAMEPLAY:
 		{
 			ClearBackground(BROWN);
 			player.Draw();
+			DrawRectangle(screenWidth / 2.0f, screenHeight / 2.0f, 30, 30, ORANGE);
 			Vector2 recSize = { 10, 20 };
 			DrawCircleV(player.position, 15.0f, SKYBLUE);
 			//draw spawn points
@@ -420,19 +513,14 @@ int main()
 			}
 			//draw zombies
 			for (Zombie& zombie : zombies) {
-				DrawCircleV(zombie.position, 10, GREEN);
+				zombie.draw();
 			}
 			if (collisionBullet && zombieTagged != -1) {
 				DrawCircleV(zombies[zombieTagged].position, 10, RED);
 			}
 			DrawText("Prototype - Frostbite", 540, 20, 20, LIGHTGRAY);
 			//dufault 1280 x 800
-			DrawText(TextFormat("FPS: %i", GetFPS()), 100, 20, 20, BLACK);;
-			DrawText(TextFormat("Score: %i", stats.score), 600, 775, 20, BLACK);
-			DrawText(TextFormat("Round: %i", stats.round), 600, 750, 20, BLACK);
-			DrawText(TextFormat("Health: %i", playerHealth), 600, 725, 20, BLACK);
-			DrawText(TextFormat("Zombies Left: %i", stats.zombiesLeft), 600, 700, 20, BLACK);
-			DrawText(TextFormat("Zombies Killed: %i", stats.zombiesKilled), 600, 675, 20, BLACK);
+			stats.drawStats(playerHealth);
 
 
 

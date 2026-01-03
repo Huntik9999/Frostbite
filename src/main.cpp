@@ -26,12 +26,13 @@ public:
 	float speed = 1.5f;
 	float radius = 10.0f;
 	std::string zombieType;
-	
+
 	Zombie() {};
 
 	Zombie(int num) {
 		setZombieStats(num);
 	}
+
 	void setZombieStats(int num) {
 		//Small 1 - 5
 		if (num >= 1 && num <= 5) {
@@ -41,7 +42,7 @@ public:
 			pointsWorth = 5;
 		}
 		//Axe 6 - 9
-		else if(num >= 6 && num <= 9) {
+		else if (num >= 6 && num <= 9) {
 			zombieType = "Axe";
 			health = 100;
 			radius = 12.5f;
@@ -54,10 +55,9 @@ public:
 			radius = 15.0f;
 			pointsWorth = 50;
 		}
-		else 
+		else
 			std::cout << "Error: Invalid zombie type number" << std::endl;
 	}
-
 	void trackPlayer(Vector2 playerPosition) {
 		// Move zombies toward player
 		if (position.x < playerPosition.x) {
@@ -75,13 +75,14 @@ public:
 		// Add some random movement
 		position.x += (rand() % 3) - 1;
 		position.y += (rand() % 3) - 1;
-	} 
+	}
 
 	void draw() {
 		// Draw zombie
 		DrawCircleV(position, radius, GREEN);
 	}
 };
+
 struct GameStats {
 	int round = 1;
 	int score = 0;
@@ -134,7 +135,7 @@ struct GameStats {
 		DrawText(TextFormat("Zombies Killed: %i", zombiesKilled), 600, 675, 20, BLACK);
 	}
 };
-typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING, SETTINGS } GameScreen;
+typedef enum GameScreen { LOGO = 0, TITLE, GAMEPLAY, ENDING, SETTINGS} GameScreen;
 class Gun;
 
 struct Bullet {
@@ -180,7 +181,6 @@ public:
 			numOfBullets--;
 		}
 	}
-
 };
 
 class MiniGun {
@@ -205,7 +205,7 @@ public:
 		for (int i = 0; i < bullets.size(); i++)
 		{
 			Bullet bullet = bullets[i];
-			DrawCircle((int)bullet.position.x, (int)bullet.position.y, 8, YELLOW);
+			DrawCircle((int)bullet.position.x, (int)bullet.position.y, 8, RED);
 		}
 	}
 
@@ -221,6 +221,7 @@ public:
 		}
 	}
 };
+
 class ShotGun {
 public:
 	int maxBullets = 10000;
@@ -256,22 +257,26 @@ public:
 			direction = Vector2Normalize(direction);
 			bullets.push_back(Bullet{ playerPos, direction });
 			numOfBullets--;
-			Vector2 mousePos2 = { GetMouseX() + 50.0f, static_cast<float>(GetMouseY()) };
+
+			Vector2 mousePos2 = { worldMousePos.x + 50.f, worldMousePos.y };
 			Vector2 dir2 = Vector2Subtract(mousePos2, playerPos);
 			dir2 = Vector2Normalize(dir2);
 			bullets.push_back(Bullet{ playerPos, dir2 });
 			numOfBullets--;
-			Vector2 mousePos3 = { GetMouseX() + 100.0f, static_cast<float>(GetMouseY()) };
+
+			Vector2 mousePos3 = { worldMousePos.x + 100.0f, worldMousePos.y };
 			Vector2 dir3 = Vector2Subtract(mousePos3, playerPos);
 			dir3 = Vector2Normalize(dir3);
 			bullets.push_back(Bullet{ playerPos, dir3 });
 			numOfBullets--;
-			Vector2 mousePos4 = { GetMouseX() - 50.0f, static_cast<float>(GetMouseY()) };
+			
+			Vector2 mousePos4 = { worldMousePos.x - 50.0f, worldMousePos.y };
 			Vector2 dir4 = Vector2Subtract(mousePos4, playerPos);
 			dir4 = Vector2Normalize(dir4);
 			bullets.push_back(Bullet{ playerPos, dir4 });
 			numOfBullets--;
-			Vector2 mousePos5 = { GetMouseX() - 100.0f, static_cast<float>(GetMouseY()) };
+			
+			Vector2 mousePos5 = { worldMousePos.x - 100.0f, worldMousePos.y };
 			Vector2 dir5 = Vector2Subtract(mousePos5, playerPos);
 			dir5 = Vector2Normalize(dir5);
 			bullets.push_back(Bullet{ playerPos, dir5 });
@@ -279,7 +284,6 @@ public:
 		}
 	}
 };
-
 
 class Player
 {
@@ -299,14 +303,15 @@ public:
 
 	void Update(Vector2 worldMousePos)
 	{
-		if (IsKeyDown(KEY_W)) velocity.y -= 0.5f;
-		if (IsKeyDown(KEY_S)) velocity.y += 0.5f;
-		if (IsKeyDown(KEY_D)) velocity.x += 0.5f;
-		if (IsKeyDown(KEY_A)) velocity.x -= 0.5f;
+		if (IsKeyDown(KEY_W)) velocity.y -= 1;
+		if (IsKeyDown(KEY_S)) velocity.y += 1;
+		if (IsKeyDown(KEY_D)) velocity.x += 1;
+		if (IsKeyDown(KEY_A)) velocity.x -= 1;
+		//if (IsKeyDown(KEY_E)) 
 
 		if (IsMouseButtonPressed(0) && gunNumber == 0)
 		{
-			gun.Shoot(position, worldMousePos );
+			gun.Shoot(position, worldMousePos);
 		}
 		if (IsMouseButtonPressed(0) && gunNumber == 1)
 		{
@@ -326,9 +331,7 @@ public:
 		if (gunNumber == 0) gun.Update();
 		else if (gunNumber == 1) gun2.Update();
 		else if (gunNumber == 2) gun3.Update();
-
 	}
-
 
 	void Draw(Vector2 worldMousePos)
 	{
@@ -346,11 +349,8 @@ public:
 		if (gunNumber == 0) gun.Draw();
 		else if (gunNumber == 1) gun2.Draw();
 		else if (gunNumber == 2) gun3.Draw();
-
 	}
-
 };
-
 class PlayerCam
 {
 public:
@@ -369,7 +369,6 @@ public:
 		cam.target = playerPosition;
 	}
 };
-
 
 int main()
 {
@@ -407,9 +406,9 @@ int main()
 	player.position = { screenWidth / 2.0f, screenHeight / 2.0f };
 
 	Bullet bullet;
+
 	PlayerCam camera;
 	camera.Initialize(screenWidth, screenHeight);
-
 
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
@@ -526,7 +525,7 @@ int main()
 							if (zombie.health <= 0) {
 								stats.zombiesKilled++;
 								stats.zombiesLeft--;
-								stats.score += 10;
+								stats.score += zombie.pointsWorth;
 								zombieTagged = -1;
 								zombies.erase(zombies.begin() + j);
 							}
@@ -536,7 +535,6 @@ int main()
 					}
 				}
 			}
-
 			//zombie player collision
 			collisionPlayer = false;
 			for (Zombie& zombie : zombies) {
@@ -581,7 +579,6 @@ int main()
 				player.gunNumber = 2;
 				stats.score -= 100;
 			}
-
 
 		} break;
 		case ENDING:
